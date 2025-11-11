@@ -670,11 +670,12 @@ fn get_new_dist_metadata(
         // FIXME: when there is more than one option this should be a proper
         // multiselect like the installer selector is! For now we do
         // most of the multi-select logic and then just give a prompt.
-        let known = &[CiStyle::Github];
+        let known = &[CiStyle::Github, CiStyle::Gitlab];
         let mut defaults = vec![];
         let mut keys = vec![];
         let mut github_key = 0;
-        for item in known {
+        let mut gitlab_key = 1;
+        for (idx, item) in known.iter().enumerate() {
             // If this CI style is in their config, keep it
             // If they passed it on the CLI, flip it on
             let mut default = meta
@@ -684,22 +685,26 @@ fn get_new_dist_metadata(
                 .unwrap_or(false)
                 || cfg.ci.contains(item);
 
-            // Currently default to enabling github CI because we don't
-            // support anything else and we can give a good error later
-            #[allow(irrefutable_let_patterns)]
-            if let CiStyle::Github = item {
-                github_key = 0;
-                default = true;
+            // Default to enabling github CI for backwards compatibility
+            match item {
+                CiStyle::Github => {
+                    github_key = idx;
+                    default = true;
+                }
+                CiStyle::Gitlab => {
+                    gitlab_key = idx;
+                }
             }
             defaults.push(default);
             // This match is here to remind you to add new CiStyles
             // to `known` above!
             keys.push(match item {
                 CiStyle::Github => "github",
+                CiStyle::Gitlab => "gitlab",
             });
         }
 
-        // Prompt the user
+        // Prompt the user for GitHub
         let prompt = r#"enable Github CI and Releases?"#;
         let default = defaults[github_key];
 
@@ -714,11 +719,28 @@ fn get_new_dist_metadata(
             res
         };
 
-        let selected = if github_selected {
-            vec![github_key]
+        // Prompt the user for GitLab
+        let prompt = r#"enable GitLab CI and Releases?"#;
+        let default = defaults[gitlab_key];
+
+        let gitlab_selected = if args.yes {
+            default
         } else {
-            vec![]
+            let res = Confirm::with_theme(&theme)
+                .with_prompt(prompt)
+                .default(default)
+                .interact()?;
+            eprintln!();
+            res
         };
+
+        let mut selected = vec![];
+        if github_selected {
+            selected.push(github_key);
+        }
+        if gitlab_selected {
+            selected.push(gitlab_key);
+        }
 
         // Apply the results
         let ci: Vec<_> = selected.into_iter().map(|i| known[i]).collect();

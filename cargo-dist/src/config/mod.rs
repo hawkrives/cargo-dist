@@ -100,12 +100,15 @@ impl std::fmt::Display for ArtifactMode {
 pub enum CiStyle {
     /// Generate Github CI
     Github,
+    /// Generate GitLab CI
+    Gitlab,
 }
 impl CiStyle {
     /// If the CI provider provides a native release hosting system, get it
     pub(crate) fn native_hosting(&self) -> Option<HostingStyle> {
         match self {
             CiStyle::Github => Some(HostingStyle::Github),
+            CiStyle::Gitlab => Some(HostingStyle::Gitlab),
         }
     }
 }
@@ -114,6 +117,7 @@ impl std::fmt::Display for CiStyle {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let string = match self {
             CiStyle::Github => "github",
+            CiStyle::Gitlab => "gitlab",
         };
         string.fmt(f)
     }
@@ -124,6 +128,7 @@ impl std::str::FromStr for CiStyle {
     fn from_str(val: &str) -> DistResult<Self> {
         let res = match val {
             "github" => CiStyle::Github,
+            "gitlab" => CiStyle::Gitlab,
             s => {
                 return Err(DistError::UnrecognizedCiStyle {
                     style: s.to_string(),
@@ -233,12 +238,15 @@ impl std::fmt::Display for GithubReleasePhase {
 pub enum HostingStyle {
     /// Host on Github Releases
     Github,
+    /// Host on GitLab Releases
+    Gitlab,
 }
 
 impl std::fmt::Display for HostingStyle {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let string = match self {
             HostingStyle::Github => "github",
+            HostingStyle::Gitlab => "gitlab",
         };
         string.fmt(f)
     }
@@ -249,6 +257,7 @@ impl std::str::FromStr for HostingStyle {
     fn from_str(val: &str) -> DistResult<Self> {
         let res = match val {
             "github" => HostingStyle::Github,
+            "gitlab" => HostingStyle::Gitlab,
             s => {
                 return Err(DistError::UnrecognizedHostingStyle {
                     style: s.to_string(),

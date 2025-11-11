@@ -35,6 +35,9 @@ pub fn do_host(cfg: &Config, host_args: HostArgs) -> DistResult<DistManifest> {
                 HostingStyle::Github => {
                     // implemented in CI backend
                 }
+                HostingStyle::Gitlab => {
+                    // implemented in CI backend
+                }
             }
         }
     }
@@ -53,9 +56,12 @@ impl<'a> DistGraphBuilder<'a> {
     ) -> DistResult<()> {
         let mut ci = vec![];
         {
-            let CiConfig { github } = &self.inner.config.ci;
+            let CiConfig { github, gitlab } = &self.inner.config.ci;
             if github.is_some() {
                 ci.push(CiStyle::Github);
+            }
+            if gitlab.is_some() {
+                ci.push(CiStyle::Gitlab);
             }
         }
 
@@ -130,6 +136,22 @@ impl<'a> DistGraphBuilder<'a> {
                             .github = Some(cargo_dist_schema::GithubHosting {
                             artifact_base_url: hosting.domain.clone(),
                             artifact_download_path: format!("{repo_path}/releases/download/{tag}"),
+                            owner: hosting.owner.clone(),
+                            repo: hosting.project.clone(),
+                        })
+                    }
+                }
+                HostingStyle::Gitlab => {
+                    // GitLab hosting support - similar to GitHub
+                    let repo_path = &hosting.repo_path;
+                    for (name, version) in &releases_without_hosting {
+                        let tag = &announcing.tag;
+                        self.manifest
+                            .ensure_release(name.clone(), version.clone())
+                            .hosting
+                            .github = Some(cargo_dist_schema::GithubHosting {
+                            artifact_base_url: hosting.domain.clone(),
+                            artifact_download_path: format!("{repo_path}/-/releases/{tag}/downloads"),
                             owner: hosting.owner.clone(),
                             repo: hosting.project.clone(),
                         })

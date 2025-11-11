@@ -69,6 +69,7 @@ use tracing::{info, warn};
 
 use crate::announce::{self, AnnouncementTag, TagMode};
 use crate::backend::ci::github::GithubCiInfo;
+use crate::backend::ci::gitlab::GitlabCiInfo;
 use crate::backend::ci::CiInfo;
 use crate::backend::installer::homebrew::{to_homebrew_license_format, HomebrewFragments};
 use crate::backend::installer::macpkg::PkgInstallerInfo;
@@ -3012,17 +3013,21 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
     }
 
     fn compute_ci(&mut self) -> DistResult<()> {
-        let CiConfig { github } = &self.inner.config.ci;
+        let CiConfig { github, gitlab } = &self.inner.config.ci;
 
         let mut has_ci = false;
         if let Some(github_config) = github {
             has_ci = true;
             self.inner.ci.github = Some(GithubCiInfo::new(&self.inner, github_config)?);
         }
+        if let Some(gitlab_config) = gitlab {
+            has_ci = true;
+            self.inner.ci.gitlab = Some(GitlabCiInfo::new(&self.inner, gitlab_config)?);
+        }
 
         // apply to manifest
         if has_ci {
-            let CiInfo { github } = &self.inner.ci;
+            let CiInfo { github, gitlab: _ } = &self.inner.ci;
             let github = github.as_ref().map(|info| {
                 let external_repo_commit = info
                     .github_release
