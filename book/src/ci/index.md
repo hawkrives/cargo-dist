@@ -25,14 +25,14 @@ GitLab CI support is available but experimental. The basic infrastructure is in 
 - CI style enum variant
 - Hosting style enum variant
 - Config structures
-- Basic CI file generation
+- Basic CI file generation at `.gitlab/workflows/dist.yml`
 
 **Current Limitations:**
 - Repository URL parsing is currently GitHub-specific. To use GitLab, the URL parsing logic needs to be extended.
 - The generated GitLab CI YAML is a minimal template and needs expansion for full build pipeline support.
 - GitLab-specific features (GitLab Runner tags, Docker integration, etc.) are not yet implemented.
 
-To enable GitLab CI in your project, add `ci = ["gitlab"]` to your `[workspace.metadata.dist]` configuration.
+To enable GitLab CI in your project, add `ci = ["gitlab"]` to your `[workspace.metadata.dist]` configuration. The workflow file will be created at `.gitlab/workflows/dist.yml` to avoid conflicts with any existing `.gitlab-ci.yml` file.
 
 
 ## Advanced configuration

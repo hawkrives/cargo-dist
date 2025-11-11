@@ -7,14 +7,18 @@ use crate::{
     DistGraph, DistResult,
 };
 
-const GITLAB_CI_FILE: &str = ".gitlab-ci.yml";
+#[cfg(not(windows))]
+const GITLAB_CI_DIR: &str = ".gitlab/workflows/";
+#[cfg(windows)]
+const GITLAB_CI_DIR: &str = r".gitlab\workflows\";
+const GITLAB_CI_FILE: &str = "dist.yml";
 
 /// Info about running dist in GitLab CI
 #[derive(Debug, Serialize)]
 pub struct GitlabCiInfo {
-    /// Cached path to repository root
+    /// Cached path to GitLab CI workflows directory
     #[serde(skip_serializing)]
-    pub repo_dir: Utf8PathBuf,
+    pub gitlab_ci_dir: Utf8PathBuf,
     /// Whether to fail-fast
     pub fail_fast: bool,
     /// Whether to cache builds
@@ -34,7 +38,7 @@ pub struct GitlabCiInfo {
 impl GitlabCiInfo {
     /// Compute the GitLab CI stuff
     pub fn new(dist: &DistGraph, ci_config: &crate::config::v1::ci::gitlab::GitlabCiConfig) -> DistResult<GitlabCiInfo> {
-        let repo_dir = dist.repo_dir.clone();
+        let gitlab_ci_dir = dist.repo_dir.join(GITLAB_CI_DIR);
         let fail_fast = ci_config.fail_fast;
         let cache_builds = ci_config.cache_builds.unwrap_or(false);
         let build_local_artifacts = ci_config.build_local_artifacts;
@@ -44,7 +48,7 @@ impl GitlabCiInfo {
         let pr_run_mode = ci_config.pr_run_mode;
 
         Ok(GitlabCiInfo {
-            repo_dir,
+            gitlab_ci_dir,
             fail_fast,
             cache_builds,
             build_local_artifacts,
@@ -125,6 +129,6 @@ publish:
 
     /// Get the path to the GitLab CI file
     pub fn ci_file_path(&self) -> Utf8PathBuf {
-        self.repo_dir.join(GITLAB_CI_FILE)
+        self.gitlab_ci_dir.join(GITLAB_CI_FILE)
     }
 }
