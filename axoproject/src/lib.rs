@@ -26,14 +26,19 @@ pub mod generic;
 #[cfg(feature = "npm-projects")]
 pub mod javascript;
 pub mod local_repo;
-mod repo;
+/// Github-specific types.
+pub mod github;
+/// Gitlab-specific types.
+pub mod gitlab;
+/// Generic repository types.
+pub mod repo;
 #[cfg(feature = "cargo-projects")]
 pub mod rust;
 #[cfg(test)]
 mod tests;
 
-pub use crate::repo::GithubRepo;
-use crate::repo::GithubRepoInput;
+pub use crate::github::GithubRepo;
+use crate::repo::Repo;
 /// A sorted map impl
 pub type SortedMap<K, V> = std::collections::BTreeMap<K, V>;
 
@@ -376,8 +381,8 @@ impl RepositoryUrl {
                 if let Some(cur_url) = &repo_url {
                     if &normalized_new_url == cur_url {
                         // great! consensus!
-                    } else if cur_url.github_repo().ok() == normalized_new_url.github_repo().ok() {
-                        // good enough! consensus on the github repo!
+                    } else if cur_url.repo().ok() == normalized_new_url.repo().ok() {
+                        // good enough! consensus on the repo!
                     } else {
                         return Err(AxoprojectError::InconsistentRepositoryKey {
                             file1: repo_url_origin.as_ref().unwrap().to_owned(),
@@ -396,8 +401,8 @@ impl RepositoryUrl {
     }
 
     /// Returns a struct which contains the repository's owner and name.
-    pub fn github_repo(&self) -> Result<GithubRepo> {
-        GithubRepoInput::new(self.0.clone())?.parse()
+    pub fn repo(&self) -> Result<Repo> {
+        Repo::from_url(&self.0)
     }
 }
 
@@ -537,17 +542,17 @@ pub struct PackageInfo {
 
 impl PackageInfo {
     /// Returns a struct which contains the repository's owner and name.
-    pub fn github_repo(&self) -> Result<Option<GithubRepo>> {
+    pub fn repo(&self) -> Result<Option<Repo>> {
         match self.repository_url.clone() {
             None => Ok(None),
-            Some(url) => Ok(Some(GithubRepoInput::new(url)?.parse()?)),
+            Some(url) => Ok(Some(Repo::from_url(&url)?)),
         }
     }
 
     /// Returns a web version of the repository URL,
     /// converted from SSH if necessary, with .git suffix trimmed.
     pub fn web_url(&self) -> Result<Option<String>> {
-        Ok(self.github_repo()?.map(|repo| repo.web_url()))
+        Ok(self.repo()?.map(|repo| repo.web_url()))
     }
 }
 

@@ -185,17 +185,28 @@ pub(crate) fn select_hosting(
 
     // Currently there's only one supported sourcehost provider
     let repo = raw_repository_url
-        .github_repo()
+        .repo()
         .map_err(|e| DistError::CantEnableGithubUrlNotGithub { inner: e })?;
-    let domain = repo.domain();
-    let repo_path = repo.web_path();
+    let (domain, repo_path, owner, project) = match repo {
+        axoproject::repo::Repo::GitHub(repo) => (
+            repo.domain(),
+            repo.web_path(),
+            repo.owner,
+            repo.name,
+        ),
+        _ => {
+            return Err(DistError::UnsupportedHost {
+                url: raw_repository_url.to_string(),
+            });
+        }
+    };
 
     Ok(Some(HostingInfo {
         hosts: hosting_providers,
         domain,
         repo_path,
         source_host: "github".to_owned(),
-        owner: repo.owner,
-        project: repo.name,
+        owner,
+        project,
     }))
 }
