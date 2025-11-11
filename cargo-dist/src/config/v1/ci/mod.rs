@@ -1,16 +1,20 @@
 //! ci config
 
 pub mod github;
+pub mod gitlab;
 
 use super::*;
 
 use github::*;
+use gitlab::*;
 
 /// ci config (final)
 #[derive(Debug, Default, Clone)]
 pub struct CiConfig {
     /// github ci
     pub github: Option<GithubCiConfig>,
+    /// gitlab ci
+    pub gitlab: Option<GitlabCiConfig>,
 }
 
 /// ci config (inheritance not yet folded)
@@ -20,6 +24,8 @@ pub struct CiConfigInheritable {
     pub common: CommonCiConfig,
     /// github ci
     pub github: Option<GithubCiLayer>,
+    /// gitlab ci
+    pub gitlab: Option<GitlabCiLayer>,
 }
 
 /// ci config (raw from file)
@@ -31,6 +37,8 @@ pub struct CiLayer {
     pub common: CommonCiLayer,
     /// github ci fields
     pub github: Option<BoolOr<GithubCiLayer>>,
+    /// gitlab ci fields
+    pub gitlab: Option<BoolOr<GitlabCiLayer>>,
 }
 impl CiConfigInheritable {
     /// get defaults for workspace config
@@ -38,24 +46,31 @@ impl CiConfigInheritable {
         Self {
             common: CommonCiConfig::defaults_for_workspace(workspaces),
             github: None,
+            gitlab: None,
         }
     }
     /// fold in inheritance and get final ci config
     pub fn apply_inheritance_for_workspace(self, workspaces: &WorkspaceGraph) -> CiConfig {
-        let Self { common, github } = self;
+        let Self { common, github, gitlab } = self;
         let github = github.map(|github| {
             let mut default = GithubCiConfig::defaults_for_workspace(workspaces, &common);
             default.apply_layer(github);
             default
         });
-        CiConfig { github }
+        let gitlab = gitlab.map(|gitlab| {
+            let mut default = GitlabCiConfig::defaults_for_workspace(workspaces, &common);
+            default.apply_layer(gitlab);
+            default
+        });
+        CiConfig { github, gitlab }
     }
 }
 impl ApplyLayer for CiConfigInheritable {
     type Layer = CiLayer;
-    fn apply_layer(&mut self, Self::Layer { common, github }: Self::Layer) {
+    fn apply_layer(&mut self, Self::Layer { common, github, gitlab }: Self::Layer) {
         self.common.apply_layer(common);
         self.github.apply_bool_layer(github);
+        self.gitlab.apply_bool_layer(gitlab);
     }
 }
 

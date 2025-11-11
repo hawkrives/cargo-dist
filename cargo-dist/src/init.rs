@@ -696,6 +696,7 @@ fn get_new_dist_metadata(
             // to `known` above!
             keys.push(match item {
                 CiStyle::Github => "github",
+                CiStyle::Gitlab => "gitlab",
             });
         }
 

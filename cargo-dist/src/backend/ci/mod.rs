@@ -9,9 +9,10 @@ use serde::Serialize;
 
 use crate::config::v0::CargoDistUrlOverrideRef;
 
-use self::github::GithubCiInfo;
+use self::{github::GithubCiInfo, gitlab::GitlabCiInfo};
 
 pub mod github;
+pub mod gitlab;
 
 /// The current version of dist
 const SELF_DIST_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -41,6 +42,8 @@ const OMNIBOR_VERSION: &str = "0.7.0";
 pub struct CiInfo {
     /// Github CI
     pub github: Option<GithubCiInfo>,
+    /// GitLab CI
+    pub gitlab: Option<GitlabCiInfo>,
 }
 
 /// Gives us the full information re: the version of dist we're supposed
