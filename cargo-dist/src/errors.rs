@@ -137,6 +137,14 @@ pub enum DistError {
         inner: AxoprojectError,
     },
 
+    /// An unsupported host was found
+    #[error("unsupported host: {url}")]
+    #[diagnostic(help("cargo-dist currently only supports GitHub."))]
+    UnsupportedHost {
+        /// The URL that was unsupported
+        url: String,
+    },
+
     /// User tried to enable Github CI support but no url for the repo
     #[error("Github CI support requires you to specify the URL of your repository")]
     #[diagnostic(help(

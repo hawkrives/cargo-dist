@@ -110,6 +110,14 @@ pub enum AxoprojectError {
         url: String,
     },
 
+    /// An error returned when a non-GitLab URL is parsed
+    #[error("Your repository URL {url} couldn't be parsed.")]
+    #[diagnostic(help("Only GitLab URLs are supported at the moment."))]
+    NotGitLabError {
+        /// URL to the repository
+        url: String,
+    },
+
     /// An error that occurred because a repository string could not be parsed for a specific reason
     #[error("failed to parse your repo, current config has repo as: {repo}")]
     #[diagnostic(help("We found a repo url but we had trouble parsing it. Please make sure it's entered correctly. This may be an error, and if so you should file an issue."))]
